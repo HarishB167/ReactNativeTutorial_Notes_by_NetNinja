@@ -1,0 +1,607 @@
+NET Ninja - React Native
+
+- Introduction and setup
+• Create a project directory : shelfie_app
+• npx create-expo-app@latest --template blank ./
+• Install expo go on mobile
+• Start developing
+> Start dev server : npx expo start
+• Restructure project
+> We will use exp router
+> Delete App.js and index.js
+> Create directory 'app'
+> Inside app folder
+create index.jsx
+import { StyleSheet, Text, View } from "react-native";
+import React from "react";
+
+const Home = () => {
+  return (
+    <View>
+      <Text>Home</Text>
+    </View>
+  );
+};
+
+export default Home;
+const styles = StyleSheet.create({});
+> Install expo router
+npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar
+> Deep linking from external source
+By this, another app can deeplink to a particular page of our app
+as shelfieapp://<pathToPage>
+In app.json add
+{"expo": { "scheme" : "shelfieapp",.... }}
+> Update application entry point 
+In package.json change
+"main" : "expo-router/entry"
+• Using appwrite.io for backend database
+
+- Text, View & Image Components
+• Styling
+const styles = StyleSheet.create({
+    container : {
+        flex : 1,
+    }
+});
+• Image element
+<Image source={{uri : '<external_link>'}} />
+> Importing from asset
+import Logo from '../assets/img/logo_light.png'
+<Image source={Logo} />
+• Multiple style sources and overriding
+<Text style={[style.title, {color: 'purple'}]}>...
+
+- File Based Navigation
+• Creata a page, example about.jsx
+• In index.jsx
+import { Link } from "expo-router";
+<Link href="about">About Page</Link>
+
+- Layouts and Stack
+• Layout file
+> Is a component and a template which wraps the rest of pages
+Footer etc.
+> Register layout file.
+This is rendered instead of index.jsx.
+In app folder create _layout.jsx
+> Explicitly tell expo router to output page content in layout
+import { StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { Slot } from "expo-router";
+const RootLayout = () => {
+  return (
+    <View style={{ flex: 1 }}>
+      <Slot />
+      <Text>Footer</Text>
+    </View>
+  );
+};
+export default RootLayout;
+const styles = StyleSheet.create({});
+
+• Stack is a Navigation component
+> This will give heading title to page
+import { StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { Stack } from "expo-router";
+
+const RootLayout = () => {
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack />
+      <Text>Footer</Text>
+    </View>
+  );
+};
+export default RootLayout;
+const styles = StyleSheet.create({});
+> Simple stack
+const RootLayout = () => {
+  return <Stack />;
+};
+> if we want more customization and apply options.
+<Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: "#ddd" },
+        headerTintColor: "#333",
+      }}
+    >
+      <Stack.Screen name="index" options={{ title: "Home" }} />
+      <Stack.Screen name="about" options={{ title: "About" }} />
+      <Stack.Screen
+        name="contact"
+        options={{ title: "Contact", headerShown: false }}
+      />
+    </Stack>
+
+- Light and Dark Themes
+• Overriding mobile theme for app for testing
+In app.json : userInterfaceStyle : "light" or "dark"
+• Using hook useColorScheme
+> In _layout.jsx
+const colorScheme = useColorScheme()
+• Storing themes in a file
+> Make folder at root - constants
+> Create file Colors.js as
+export const Colors = {
+  primary: "#6849a7",
+  warning: "#cc475a",
+  
+  dark: {
+    text: "#d4d4d4",
+    title: "#fff",
+    background: "#252231",
+    navBackground: "#201e2b",
+    iconColor: "#9591a5",
+    iconColorFocused: "#fff",
+    uiBackground: "#2f2b3d",
+  },
+  light: {
+    text: "#625f72",
+    title: "#201e2b",
+    background: "#e0dfe8",
+    navBackground: "#e8e7ef",
+    iconColor: "#686477",
+    iconColorFocused: "#201e2b",
+    uiBackground: "#d6d5e1",
+  },
+}
+> In _layout.jsx
+import {Colors} from "../constants/Colors"
+const theme = Colors[colorScheme] ?? Colors.light // ?? is for null value
+• Status bar auto color itself based on dark or light mode
+> Inside _layout.jsx
+return (
+<>
+<StatusBar value="auto" />
+<Stack...
+<>)
+
+- Themed UI Components
+• Make a new folder in root - "components"
+• Make components/ThemedView.jsx
+> Children is automatically passed when using self closing element <View />.
+But when not using self closing them, <View>{children}</View> is required.
+import { View, useColorScheme } from "react-native";
+import React from "react";
+import {Colors} from "../constants/Colors";
+
+const ThemedView = ({ style, ...props }) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  return (
+    <View
+      style={[
+        {
+          backgroundColor: theme.background,
+        },
+        style,
+      ]}
+      {...props}
+    />
+  );
+};
+
+export default ThemedView;
+• Idea : Using Spacer components for margin between components.
+
+- 7 : Route Groups & Nested Layouts
+• Grouping related content/pages together
+> Using routes
+>> When folder path is app/auth/login.js
+It creates a route as site/auth/login
+app/auth/.. - is for grouping also showing in route also 
+>> When folder path is app/(auth)/login.js
+It creates a route as site/login
+app/(auth)/... - is for grouping but not showing grouping in route 
+• Nested layouts
+> For app/(auth)/login.jsx and register.jsx
+Create _layout.jsx as
+import { Stack } from "expo-router"
+import { StatusBar } from "react-native"
+
+export default function AuthLayout() {
+  return (
+    <>
+      <StatusBar style="auto" />
+      <Stack 
+        screenOptions={{ headerShown: false, animation: "none" }} 
+      />
+    </>
+  )
+}
+> Also do change in main app/_layout.jsx
+So that (auth) header is not showin in pages
+<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+- 8 : Pressable Component
+• Creating pressable button
+> States : regular, pressed
+import {StyleSheet, Pressable} from 'react-native'
+
+  const handleSubmit = async () => {
+    console.log('login form submitted')
+  }
+
+<Pressable
+onPress={handleSubmit}
+ style={({pressed}) => [styles.btn, pressed && styles.pressed]}></Pressable>
+
+- 9 : Tabs Navigation
+• Create a new group dashboard
+app/(dashboard)
+Only login user can see these pages
+> Create pages
+profile.jsx, create.jsx, books.jsx
+• Bug solve : for index.jsx page not appearing at home
+Put this line at first in _layout.jsx
+<Stack.Screen name="index" options={{ title: "Home" }} />
+• Create (dashboard)/_layout.jsx as
+import { Tabs } from "expo-router";
+
+const DashboardLayout = () => {
+  return <Tabs />;
+};
+
+export default DashboardLayout;
+
+> This will create basic tab for each page.
+• Adding screenoptions, and changing tab title using Screen
+<Tabs screenOptions={{ headerShown: false, tabBarStyle: {
+        backgroundColor: theme.navBackground,
+        paddingTop: 10, height: 90
+    },
+    tabBarActiveTintColor: theme.iconColorFocused,
+    tabBarInactiveTintColor: theme.iconColor
+ }}>
+<Tabs.Screen name="profile" options={{ title: "Profile" }} />
+</Tabs>
+
+- 10 : Tab Bar Icons
+• Install icon package
+npm install @expo/vector-icons
+• Add icons to tabs
+import {Ionicons} from '@expo/vector-icons'
+
+<Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: () => (
+<Ionicons 
+ size={24}
+ name={focused ? "create" : "create-outline"}
+color={focused ? theme.iconColorFocused : theme.iconColor}
+/>
+)}} />
+
+- 11 : Safe Area View
+• To prevent content from going under camera, edges etc.
+• In ThemedView.jsx
+import {SafeAreaView, ...} from 'react-native'
+
+const ThemedView = ({..., safe = false, ...props}) => {
+if (!safe) return ( <View .../>)
+return ( <SafeAreaView ... />)
+• Better way
+import { useSafeAreaInsets} from "react-native-safe-area-context";
+
+const ThemedView = ({..., safe = false, ...props}) => {
+const insets = useSafeAreaInsets() 
+if (!safe) return ( <View .../>)
+return ( <View style={[{..., paddingTop: insets.top, paddingBottom: insets.bottom,}]} ... />)
+
+- 12 : Backend Setup with Appwrite
+• We will be using auth and databases services only in this app
+• In Appwrite 
+> open Shelfie project
+> Go in Get Started section
+> Add a platform > React Native
+> Give name : shelfie, package name : dev.kc.shelfie
+> Now use given prompt for chatgpt or do following
+Install : npx expo install react-native-appwrite expo-file-system react-native-url-polyfill
+>> Create lib/appwrite.js as
+import 'react-native-url-polyfill/auto';
+import { Client } from 'react-native-appwrite';
+
+export const client = new Client()
+  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  .setProject('YOUR_PROJECT_ID')
+  .setPlatform('YOUR_ANDROID_OR_IOS_PACKAGE_ID');
+• Change lib/appwrite.js as
+import 'react-native-url-polyfill/auto';
+import { Client, Account, Avatars } from 'react-native-appwrite';
+
+export const client = new Client()
+  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  .setProject('YOUR_PROJECT_ID')
+  .setPlatform('YOUR_ANDROID_OR_IOS_PACKAGE_ID');
+export const account = new Account(client)
+export const avatars = new Avatars(client)
+
+- 13 : Login & Signup Forms
+• Create components/ThemedTextInput.jsx
+import { TextInput, useColorScheme } from "react-native";
+import React from "react";
+import { Colors } from "../constants/Colors";
+
+const ThemedTextInput = ({ style, ...props }) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  return (
+    <TextInput
+      style={[
+        {
+          backgroundColor: theme.uiBackground,
+          color: theme.text,
+          padding: 20,
+          borderRadius: 6,
+        },
+        style,
+      ]}
+      {...props}
+    />
+  );
+};
+• Login form
+> In login.jsx
+const [email, setEmail] = useState("")
+const [password, setPassword = useState("")
+  const handleSubmit = () => {
+    console.log("login form submitted", email, password);
+  };
+<TextInput
+style={{ width: '80%', marginBottom: 20 }}
+keyboardType="email-address"
+ placeholder="Email"
+onChangeText={setEmail}
+value={email}
+ />
+<TextInput
+style={{ width: '80%', marginBottom: 20 }}
+ placeholder="Password"
+onChangeText={setPassword}
+value={password}
+secureTextEntry
+ />
+• Register form
+> In register.jsx
+• Making keyboard disappear when touching other area
+> In register.jsx
+return (
+<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+... remaing data....
+</TouchableWithoutFeedback/>)
+
+- 14 : Making an Auth Context
+• Creating context
+> Create folder - contexts/
+> Create new file - contexts/UserContext.jsx
+import { createContext, useState } from 'react'
+
+export const UserContext = createContext()
+
+export function UserProvider({ children }) {
+const [user, setUser] = userState(null)
+
+async function login(email, password) {
+
+}
+async function register(email, password) {
+
+}
+async function logout() {
+
+}
+return (
+<UserContext.Provider value={{ user, login, register, logout }}>
+{children}
+</UserContext.Provider>
+)
+}
+• Using context
+> In app/_layout.jsx
+return (
+<UserProvider>
+...data...
+</UserProvider>
+)
+• Creating hooks for context
+> Create folder : hooks/
+> Create file : hooks/useUser.jsx
+import { useContext } from 'react'
+import { UserContext } from '../contexts/UserContext'
+
+export function useUser() {
+const context = useContext(UserContext)
+if (!context) {
+throw new Error("useUser must be used witha a UserProvider")
+}
+return context
+}
+• Using context and hooks
+> In login.jsx
+const { user } = useUser() 
+> In handleSubmit add
+console.log("current user : ", user)
+
+- 15 : Logging Users In
+• In UserContext.jsx
+> import
+import { account } from "../lib/appwrite"
+import {ID} from "react-native-appwrite"
+> In register func
+async function register(email, password) {
+try {
+//await account.create(ID.unique(), email, password)
+await account.create({ userId: ID.unique(), email, password })
+await login(email, password)
+} catch (error) {
+console.log(error.message)
+}
+}
+> In login func
+async function login(email, password) {
+try {
+//await account.createEmailPasswordSession(email, password)
+await account.createEmailPasswordSession({ email, password });
+const response = await account.get()
+setUser(response)
+} catch (error) {
+console.log(error.message)
+}
+}
+• In register.jsx
+const {register} = useUser()
+
+const handleSubmit = async () => {
+try {
+await register(email, password)
+} catch (error) {
+
+}
+}
+• In login.jsx
+const {login} = useUser()
+
+const handleSubmit = async () => {
+try {
+await login(email, password)
+} catch (error) {
+
+}
+}
+• Now, try registering a user from app.
+• Accessing user details in app
+> In app/(auth)/_layout.jsx
+
+const { user } = userUser()
+console.log(user)
+
+- 16 : Showing Error Messages
+• Throw error
+• In UserContext.jsx
+In login and register function
+catch(error) { throw Error(error.message) }
+• In login.jsx
+const [error, setError] = useState(null)
+> In handleSubmit
+setError(null)
+...catch (error) { setError(error.message) }
+> Below login button
+<Spacer />
+{error && <Text style={styles.error}>{error}</Text>}
+> Create error class as
+...  error: {
+    color: Colors.warning,
+    padding: 10,
+    backgroundColor: '#f5c1c8',
+    borderColor: Colors.warning,
+    borderWidth: 1,
+    borderRadius: 6,
+    marginHorizontal: 10,
+  }
+• In register.jsx
+const [error, setError] = useState(null)
+> In handleSubmit
+setError(null)
+...catch (error) { setError(error.message) }
+
+> Below register button
+<Spacer />
+{error && <Text style={styles.error}>{error}</Text>}
+> Create error class as
+...  error: {
+    color: Colors.warning,
+    padding: 10,
+    backgroundColor: '#f5c1c8',
+    borderColor: Colors.warning,
+    borderWidth: 1,
+    borderRadius: 6,
+    marginHorizontal: 10,
+  }
+
+- 17 : Logging Users Out
+• In UserContext.jsx
+> complete logout function as
+async function.logout() {
+await account.deleteSession('current')
+setUser(null)
+• (dashboard)/profile.jsx
+const { logout } = useUser()
+> At last add
+...
+<ThemedButton onPress={logout}>
+<Text style={{color: "#f2f2f2" }}>Logout</Text>
+</ThemedButton>
+• Test logging out
+> Reload app
+> Click logout button in profile page
+> Reload app
+> Register a new account
+> If success. Then there was no active session on app. Verify it on auth appwrite.io.
+
+- 18 : Initial Auth State
+• In profile.jsx
+> const { logout, user } = useUser()
+> Replace "Your Email" with {user.email}
+• Getting active user session from backend - appwrite
+> account.get() reaches appwrite and asks for active session
+If session not present - then returns null
+If there is session - then session is returned
+• In UserContext.jsx
+> import useEffect
+> const [authChecked, setAuthChecked] = useState(false)
+> Before return
+
+async function getInitialUserValue() {
+try {
+const response = await account.get()
+setUser(response)
+} catch (error) {
+setUser(null)
+} finally {
+setAuthChecked(true)
+}
+}
+
+useEffect(() => {
+getInitialUserValue()
+}, [])
+> return ( <UserContext.Provider value={{...., authChecked...
+
+- 19 : Protecting Routes
+• Protecting (dashboard) routes
+> Redirect them to login page
+> When logging out then redirect them to login page
+• Create folder -> components/auth
+> Create component UserOnly.jsx
+import useUser
+import useRouter
+
+const UserOnly = ({children}) => {
+const {user, authChecked} = useUser()
+const router = useRouter()
+
+useEffect(() => {
+if (authChecked && user === null) {
+router.replace('/login')
+}
+}, [user, authChecked])
+
+if (!authChecked || !user) {
+return (
+<Text>Loading</Text>
+)
+}
+
+return children
+}
+export default UserOnly
+
+• In (dashboard)/_layout.jsx
+import UserOnly
+return (
+<UserOnly>
+...
+</UserOnly>
+)
+
+https://www.youtube.com/watch?v=UCbRTaX6i7g&list=PL4cUxeGkcC9hNTz3sxqGTfxAwU-DIHJd2&index=2
