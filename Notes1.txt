@@ -970,5 +970,41 @@ import useLocalSearchParams
 const {id} = useLocalSearchParams()
 Book Details - {id}
 
+- 28 : Fetching Single Records
+* In BooksContext.jsx
+async function fetchBookById(id) {
+  try {
+    const response = await databases.getDocument(
+      DATABASE_ID,
+      COLLECTION_ID,
+      id
+    )
+    return response
+  } catch (error) {...}
+}
+* In [id].jsx
+import useEffect, useState
+import useBooks
+
+const [book, setBook] = useState(null)
+const {fetchBookById} = useBooks()
+
+useEffect(() => {
+  async function loadBook() {
+    const bookData = await fetchBookById(id)
+    setBook(bookData)
+  }
+  loadBook()
+}, [id])
+
+if (!book) {
+  return (
+    <ThemedView safe={true} style={styles.container}>
+      <ThemedLoader/>
+    </ThemedView>
+  )
+}
+> Paste template from course files
+
 ----------------------------------------
-Vid 27 completed
+Vid 28 completed
