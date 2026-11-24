@@ -843,5 +843,27 @@ useEffect(() => {
 }, [user])
 * Test the app
 
+- 25 : Using the FlatList Components
+* Add some 8 to 10 books to database
+* In (dashboard)/books.jsx
+build using course files.
+* Now
+const {books} = useBooks()
+
+<FlatList
+data={books}
+keyExtractor={(item) => item.$id}
+contentContainerStyle={styles.list}
+renderItem={({item}) => (
+  <Pressable>
+    <ThemedCard style={styles.card}>
+      <ThemedText style={styles.title}>{item.title}</ThemedText>
+      <ThemedText>Written by {item.author}</ThemedText>
+    </ThemedCard>
+  </Pressable>
+)}
+/>
+* Restart and Test the app
+
 ----------------------------------------
-Vid 24 completed
+Vid 25 completed
