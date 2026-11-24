@@ -865,5 +865,94 @@ renderItem={({item}) => (
 />
 * Restart and Test the app
 
+- 25 : Real-Time Data
+* Reloading data/list after adding new book
+* Adding real time subscription
+> In appwrite.js add setEndpoint as
+export const client = new Client()
+  .setEndpoint("https://fra.cloud.appwrite.io/v1")
+  .setProject("...")
+  .setPlatform("...");
+
+// NEW VERSION
+import {...Realtime} from "react-native-appwrite";
+export const realtime = new Realtime(client);
+
+* In BooksContext.jsx
+import {..., client} from "../lib/appwrite"
+
+useEffect(() => {
+  let unsubscribe;
+  // listening to document/row events inside a collection/table
+  const channel = `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`
+  if (user) {
+    fetchBooks()
+
+    unsubscribe = client.subscribe(channel, (response) => {
+      const { payload, events } = response // payload is record, events is array of string describing event (added, deleted, modified etc)
+      if (events[0].includes('create')) {
+        setBooks((prevBooks) => [...prevBooks, payload])
+      }
+    })
+...
+
+  return () => {
+    if (unsubscribe) unsubscribe()
+  }
+}, [user])
+
+// NEW VERSION
+import {..., realtime} from "../lib/appwrite"
+  
+useEffect(() => {
+    let subscription;
+    let isMounted = true;
+
+    if (user) {
+      fetchBooks();
+
+      const setupRealtime = async () => {
+        const sub = await realtime.subscribe(
+          Channel.tablesdb(DATABASE_ID).table(TABLE_ID).row(),
+          (response) => {
+            const { payload, events } = response;
+            console.log("response in channel :>> ", response);
+            if (events[0].includes("create")) {
+              setBooks((prevBooks) => [...prevBooks, payload]);
+            }
+          }
+        );
+
+        if (!isMounted) {
+          await sub.unsubscribe();
+        } else {
+          subscription = sub;
+        }
+      };
+      setupRealtime();
+    } else {
+      setBooks([]);
+    }
+
+    return () => {
+      isMounted = false;
+      if (subscription) subscription.unsubscribe();
+    };
+  }, [user]);
+
+* Reload app, and test
+* In appwrite.js
+> To handle new bug of Realtime add this line before import statement of react-native-appwrite
+
+// Prevent crash in react-native-appwrite's Realtime.onMessage
+if (typeof window !== "undefined" && !window.localStorage) {
+  window.localStorage = {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+  };
+}
+
+
 ----------------------------------------
-Vid 25 completed
+Vid 26 completed
