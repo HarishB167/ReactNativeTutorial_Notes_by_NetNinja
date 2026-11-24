@@ -982,6 +982,12 @@ async function fetchBookById(id) {
     return response
   } catch (error) {...}
 }
+// NEW VERSION
+const response = await tablesDB.getRow({
+  databaseId: DATABASE_ID,
+  tableId: TABLE_ID,
+  rowId: id,
+});
 * In [id].jsx
 import useEffect, useState
 import useBooks
@@ -1006,5 +1012,44 @@ if (!book) {
 }
 > Paste template from course files
 
+- 29 : Deleting Books
+* In BooksContext.jsx
+async function deleteBook(id) {
+  try {
+    await databases.deleteDocument(
+      DATABASE_ID,
+      COLLECTION_ID,
+      id
+    )
+  } catch (error) { ... }
+}
+//NEW VERSION
+await tablesDB.deleteRow({
+  databaseId: DATABASE_ID,
+  tableId: TABLE_ID,
+  rowId: id
+})
+* In [id].jsx
+import useRouter
+const {..., deleteBook} = useBooks()
+const router = useRouter()
+const handleDelete = async() => {
+  await deleteBook(id)
+  setBook(null)
+  router.replace("/books")
+}
+At bottom add
+<ThemedButton style={styles.delete} onPress={handleDelete}>
+  <Text style={{color: "#fff", textAlign: "center"}}>
+    Delete Book
+  </Text>
+</ThemedButton>
+> Add style from course files
+* In BooksContext.jsx
+In useEffect add for event
+if (events[0].includes('delete') {
+  setBooks((prevBooks) => prevBooks.filter((book) => book.$id !== payload.$id))
+}
+
 ----------------------------------------
-Vid 28 completed
+Vid 29 completed
